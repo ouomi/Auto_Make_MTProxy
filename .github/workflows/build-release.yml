@@ -7,6 +7,9 @@ on:
       - 'v*'
   # 允许在 GitHub Actions 页面手动点击运行
   workflow_dispatch:
+  # 每月 1 号的 00:00 (UTC 时间) 自动触发
+  schedule:
+    - cron: '0 0 1 * *' 
 
 jobs:
   build-and-release:
@@ -15,6 +18,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      - name: Set Custom Tag Name
+        id: get_tag
+        run: |
+          # 如果是推送 tag 触发，就使用原有的 tag 名字
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            # 如果是手动或定时触发，生成北京时间（Asia/Shanghai）的“年月日时分”作为 tag
+            # 格式例如：202605290630
+            echo "tag_name=$(TZ='Asia/Shanghai' date +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
+          fi
 
       - name: Install Build Dependencies
         # 对应你历史记录中的 apt install 命令
@@ -44,5 +59,6 @@ jobs:
         # 只有在通过 tag 触发时才创建 Release
         if: startsWith(github.ref, 'refs/tags/')
         with:
+          tag_name: ${{ steps.get_tag.outputs.tag_name }} # 使用上面步骤生成的动态 Tag
           files: dist/mtproxy-linux-x86_64.tar.gz
           generate_release_notes: true
