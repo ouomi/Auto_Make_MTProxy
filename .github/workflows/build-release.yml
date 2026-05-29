@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout
 
       - name: Install Build Dependencies
         # 对应你历史记录中的 apt install 命令
@@ -40,7 +40,7 @@ jobs:
           tar -czvf mtproxy-linux-x86_64.tar.gz mtproto-proxy
 
       - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release
         # 只有在通过 tag 触发时才创建 Release
         if: startsWith(github.ref, 'refs/tags/')
         with:
